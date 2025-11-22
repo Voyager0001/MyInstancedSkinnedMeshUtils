@@ -20,7 +20,7 @@ struct FAnimBankRecordHandle;
 struct FPrimitiveSceneDesc;
 
 USTRUCT()
-struct FSkinnedMeshInstanceData
+struct FMySkinnedMeshInstanceData
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -30,19 +30,19 @@ struct FSkinnedMeshInstanceData
 	UPROPERTY(EditAnywhere, Category = Animation)
 	uint32 AnimationIndex;
 
-	FSkinnedMeshInstanceData()
+	FMySkinnedMeshInstanceData()
 	: Transform(FTransform3f::Identity)
 	, AnimationIndex(0)
 	{
 	}
 
-	FSkinnedMeshInstanceData(const FTransform3f& InTransform, uint32 InAnimationIndex)
+	FMySkinnedMeshInstanceData(const FTransform3f& InTransform, uint32 InAnimationIndex)
 	: Transform(InTransform)
 	, AnimationIndex(InAnimationIndex)
 	{
 	}
 
-	friend FArchive& operator<<(FArchive& Ar, FSkinnedMeshInstanceData& InstanceData)
+	friend FArchive& operator<<(FArchive& Ar, FMySkinnedMeshInstanceData& InstanceData)
 	{
 		Ar << InstanceData.Transform;
 		Ar << InstanceData.AnimationIndex;
@@ -62,7 +62,7 @@ protected:
 
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
-	TArray<FSkinnedMeshInstanceData> InstanceData;
+	TArray<FMySkinnedMeshInstanceData> InstanceData;
 
 	/** Defines the number of floats that will be available per instance for custom data */
 	UPROPERTY(EditAnywhere, Category=Instances, AdvancedDisplay)
@@ -223,7 +223,7 @@ public:
 
 	int32 GetNumCustomDataFloats() const { return NumCustomDataFloats; }
 	const TArray<float>& GetInstanceCustomData() const { return InstanceCustomData; }
-	const TArray<FSkinnedMeshInstanceData>& GetInstanceData() const { return InstanceData; }
+	const TArray<FMySkinnedMeshInstanceData>& GetInstanceData() const { return InstanceData; }
 
 	int32 GetInstanceCountGPUOnly() const { return NumInstancesGPUOnly; }
 
@@ -233,10 +233,10 @@ public:
 protected:
 
 	/** Handle changes that must happen before the proxy is recreated. */
-	void PreApplyComponentInstanceData(struct FInstancedSkinnedMeshComponentInstanceData* ComponentInstanceData);
+	void PreApplyComponentInstanceData(struct FMyInstancedSkinnedMeshComponentInstanceData* ComponentInstanceData);
 
 	/** Applies the cached component instance data to a newly blueprint constructed component. */
-	void ApplyComponentInstanceData(struct FInstancedSkinnedMeshComponentInstanceData* ComponentInstanceData);
+	void ApplyComponentInstanceData(struct FMyInstancedSkinnedMeshComponentInstanceData* ComponentInstanceData);
 
 	FInstanceDataManagerSourceDataDesc GetComponentDesc(EShaderPlatform InShaderPlatform);
 
@@ -265,7 +265,7 @@ private:
 	void SetInstanceDataGPUOnly(bool bInInstancesGPUOnly);
 
 	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
-	void SetupNewInstanceData(FSkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 AnimationIndex);
+	void SetupNewInstanceData(FMySkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 AnimationIndex);
 
 	static VAT_API bool ShouldForceRefPose();
 	static VAT_API bool ShouldUseAnimationBounds();
@@ -283,7 +283,7 @@ private:
 
 	friend class FInstancedSkinnedMeshSceneProxy;
 	friend class FInstancedSkinnedMeshComponentHelper;
-	friend struct FInstancedSkinnedMeshComponentInstanceData;
+	friend struct FMyInstancedSkinnedMeshComponentInstanceData;
 	friend struct FInstancedSkinnedMeshSceneProxyDesc;
 	friend struct FSkinnedMeshComponentDescriptorBase;
 
@@ -295,14 +295,14 @@ public:
 
 /** Helper class used to preserve state across blueprint re-instancing */
 USTRUCT()
-struct FInstancedSkinnedMeshComponentInstanceData : public FSceneComponentInstanceData
+struct FMyInstancedSkinnedMeshComponentInstanceData : public FSceneComponentInstanceData
 {
 	GENERATED_BODY()
 
 public:
-	FInstancedSkinnedMeshComponentInstanceData() = default;
+	FMyInstancedSkinnedMeshComponentInstanceData() = default;
 	
-	FInstancedSkinnedMeshComponentInstanceData(const UMyInstancedSkinnedMeshComponent* InComponent)
+	FMyInstancedSkinnedMeshComponentInstanceData(const UMyInstancedSkinnedMeshComponent* InComponent)
 		: FSceneComponentInstanceData(InComponent)
 		, SkinnedAsset(InComponent->GetSkinnedAsset())
 		, PrimitiveBoundsOverride(InComponent->GetPrimitiveBoundsOverride())
@@ -311,7 +311,7 @@ public:
 	{
 	}
 
-	virtual ~FInstancedSkinnedMeshComponentInstanceData() = default;
+	virtual ~FMyInstancedSkinnedMeshComponentInstanceData() = default;
 
 	virtual bool ContainsData() const override
 	{
@@ -337,7 +337,7 @@ public:
 	TObjectPtr<USkinnedAsset> SkinnedAsset = nullptr;
 
 	UPROPERTY()
-	TArray<FSkinnedMeshInstanceData> InstanceData;
+	TArray<FMySkinnedMeshInstanceData> InstanceData;
 
 	TBitArray<> SelectedInstances;
 
@@ -353,4 +353,5 @@ public:
 	UPROPERTY()
 	int32 NumInstancesGPUOnly = 0;
 };
+
 

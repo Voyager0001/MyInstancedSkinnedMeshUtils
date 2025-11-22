@@ -87,13 +87,13 @@ bool UMyInstancedSkinnedMeshComponent::ShouldUseAnimationBounds()
 	return CVarInstancedSkinnedMeshesAnimationBounds.GetValueOnAnyThread() != 0;
 }
 
-struct FSkinnedMeshInstanceData_Deprecated
+struct FMySkinnedMeshInstanceData_Deprecated
 {
 	FMatrix Transform;
 	uint32 AnimationIndex;
 	uint32 Padding[3]; // Need to respect 16 byte alignment for bulk-serialization
 
-	FSkinnedMeshInstanceData_Deprecated()
+	FMySkinnedMeshInstanceData_Deprecated()
 	: Transform(FMatrix::Identity)
 	, AnimationIndex(0)
 	{
@@ -102,7 +102,7 @@ struct FSkinnedMeshInstanceData_Deprecated
 		Padding[2] = 0;
 	}
 
-	FSkinnedMeshInstanceData_Deprecated(const FMatrix& InTransform, uint32 InAnimationIndex)
+	FMySkinnedMeshInstanceData_Deprecated(const FMatrix& InTransform, uint32 InAnimationIndex)
 	: Transform(InTransform)
 	, AnimationIndex(InAnimationIndex)
 	{
@@ -111,9 +111,9 @@ struct FSkinnedMeshInstanceData_Deprecated
 		Padding[2] = 0;
 	}
 
-	friend FArchive& operator<<(FArchive& Ar, FSkinnedMeshInstanceData_Deprecated& InstanceData)
+	friend FArchive& operator<<(FArchive& Ar, FMySkinnedMeshInstanceData_Deprecated& InstanceData)
 	{
-		// @warning BulkSerialize: FSkinnedMeshInstanceData is serialized as memory dump
+		// @warning BulkSerialize: FMySkinnedMeshInstanceData is serialized as memory dump
 		// See TArray::BulkSerialize for detailed description of implied limitations.
 		Ar << InstanceData.Transform;
 		Ar << InstanceData.AnimationIndex;
@@ -145,14 +145,14 @@ void UMyInstancedSkinnedMeshComponent::Serialize(FArchive& Ar)
 	if (Ar.IsLoading())
 	{
 		// Read existing data if it was serialized
-		TArray<FSkinnedMeshInstanceData> TempInstanceData;
+		TArray<FMySkinnedMeshInstanceData> TempInstanceData;
 		TArray<float> TempInstanceCustomData;
 
 		if (bHasSkipSerializationPropertiesData)
 		{
 			if (Ar.CustomVer(FUE5MainStreamObjectVersion::GUID) < FUE5MainStreamObjectVersion::SkinnedMeshInstanceDataSerializationV2)
 			{
-				TArray<FSkinnedMeshInstanceData_Deprecated> TempInstanceData_Deprecated;
+				TArray<FMySkinnedMeshInstanceData_Deprecated> TempInstanceData_Deprecated;
 				TempInstanceData_Deprecated.BulkSerialize(Ar, false /* force per element serialization */);
 
 				TempInstanceData.Reserve(TempInstanceData_Deprecated.Num());
@@ -331,7 +331,7 @@ void UMyInstancedSkinnedMeshComponent::SetInstanceDataGPUOnly(bool bInInstancesG
 	}
 }
 
-void UMyInstancedSkinnedMeshComponent::SetupNewInstanceData(FSkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 InAnimationIndex)
+void UMyInstancedSkinnedMeshComponent::SetupNewInstanceData(FMySkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 InAnimationIndex)
 {
 	InOutNewInstanceData.Transform = InInstanceTransform;
 	InOutNewInstanceData.AnimationIndex = InAnimationIndex;
@@ -551,8 +551,8 @@ void UMyInstancedSkinnedMeshComponent::PostEditChangeChainProperty(FPropertyChan
 			}
 			MarkRenderStateDirty();
 		}
-		else if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FSkinnedMeshInstanceData, Transform)
-			 || PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FSkinnedMeshInstanceData, AnimationIndex))
+		else if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FMySkinnedMeshInstanceData, Transform)
+			 || PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FMySkinnedMeshInstanceData, AnimationIndex))
 		{
 			MarkRenderStateDirty();
 		}
@@ -610,8 +610,8 @@ TStructOnScope<FActorComponentInstanceData> UMyInstancedSkinnedMeshComponent::Ge
 {
 	TStructOnScope<FActorComponentInstanceData> ComponentInstanceData;
 #if WITH_EDITOR
-	ComponentInstanceData.InitializeAs<FInstancedSkinnedMeshComponentInstanceData>(this);
-	FInstancedSkinnedMeshComponentInstanceData* SkinnedMeshInstanceData = ComponentInstanceData.Cast<FInstancedSkinnedMeshComponentInstanceData>();
+	ComponentInstanceData.InitializeAs<FMyInstancedSkinnedMeshComponentInstanceData>(this);
+	FMyInstancedSkinnedMeshComponentInstanceData* SkinnedMeshInstanceData = ComponentInstanceData.Cast<FMyInstancedSkinnedMeshComponentInstanceData>();
 
 	// Back up per-instance info (this is strictly for Comparison in UMyInstancedSkinnedMeshComponent::ApplyComponentInstanceData 
 	// as this Property will get serialized by base class FActorComponentInstanceData through FComponentPropertyWriter which uses the PPF_ForceTaggedSerialization to backup all properties even the custom serialized ones
@@ -640,7 +640,7 @@ void UMyInstancedSkinnedMeshComponent::SetCullDistances(int32 StartCullDistance,
 	}
 }
 
-void UMyInstancedSkinnedMeshComponent::PreApplyComponentInstanceData(struct FInstancedSkinnedMeshComponentInstanceData* InstancedMeshData)
+void UMyInstancedSkinnedMeshComponent::PreApplyComponentInstanceData(struct FMyInstancedSkinnedMeshComponentInstanceData* InstancedMeshData)
 {
 #if WITH_EDITOR
 	// Prevent proxy recreate while traversing the ::ApplyToComponent stack
@@ -648,7 +648,7 @@ void UMyInstancedSkinnedMeshComponent::PreApplyComponentInstanceData(struct FIns
 #endif
 }
 
-void UMyInstancedSkinnedMeshComponent::ApplyComponentInstanceData(struct FInstancedSkinnedMeshComponentInstanceData* InstancedMeshData)
+void UMyInstancedSkinnedMeshComponent::ApplyComponentInstanceData(struct FMyInstancedSkinnedMeshComponentInstanceData* InstancedMeshData)
 {
 #if WITH_EDITOR
 	check(InstancedMeshData);
@@ -835,7 +835,7 @@ bool UMyInstancedSkinnedMeshComponent::GetInstanceTransform(FPrimitiveInstanceId
 		return false;
 	}
 
-	const FSkinnedMeshInstanceData& Instance = InstanceData[InstanceIndex];
+	const FMySkinnedMeshInstanceData& Instance = InstanceData[InstanceIndex];
 
 	OutInstanceTransform = FTransform(Instance.Transform);
 	if (bWorldSpace)
@@ -1132,3 +1132,4 @@ void UMyInstancedSkinnedMeshComponent::TickComponent(float DeltaTime, enum ELeve
 #endif // WITH_EDITOR
 	}
 }
+
