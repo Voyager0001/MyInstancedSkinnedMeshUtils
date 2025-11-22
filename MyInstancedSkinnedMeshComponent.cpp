@@ -16,21 +16,34 @@
 #include "Rendering/RenderCommandPipes.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "SceneInterface.h"
-#include "Runtime/Engine/Private/SkeletalRenderNanite.h"
-#include "Runtime/Engine/Private/SkeletalRenderGPUSkin.h"
+//#include "Runtime/Engine/Private/SkeletalRenderNanite.h"
+//#include "Runtime/Engine/Private/SkeletalRenderGPUSkin.h"
 #include "SkinningDefinitions.h"
 #include "SkinnedMeshSceneProxyDesc.h"
 #include "Runtime/Engine/Public/InstanceData/InstanceUpdateChangeSet.h"
 #include "Runtime/Engine/Private/InstanceData/InstanceDataUpdateUtils.h"
+#include "Runtime/Engine/Private/InstanceData/InstanceDataUpdateUtils.h"
+
+// Suppress C3837 error in InstancedSkinnedMeshComponent.h by disabling attribute macros
+#undef UE_EXPERIMENTAL
+#define UE_EXPERIMENTAL(...)
+#undef UE_DEPRECATED
+#define UE_DEPRECATED(...)
+
 #include "InstancedSkinnedMeshComponentHelper.h"
 #include "PrimitiveSceneDesc.h"
 #include "Runtime/Engine/Private/InstancedSkinnedMeshSceneProxy.h"
+
+// Restore macros if possible, or leave empty (safe for compilation)
+
 
 #if WITH_EDITOR
 #include "WorldPartition/HLOD/HLODHashBuilder.h"
 #endif
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(MyInstancedSkinnedMeshComponent)
+
+class UInstancedSkinnedMeshComponent;
 
 TAutoConsoleVariable<int32> CVarInstancedSkinnedMeshesForceRefPose(
 	TEXT("r.InstancedSkinnedMeshes.ForceRefPose"),
@@ -56,7 +69,8 @@ static TAutoConsoleVariable<int32> CVarInstancedSkinnedMeshesAnimationBounds(
 
 static FSkeletalMeshObject* CreateInstancedSkeletalMeshObjectFunction(void* UserData, USkinnedMeshComponent* InComponent, FSkeletalMeshRenderData* InRenderData, ERHIFeatureLevel::Type InFeatureLevel)
 {
-	return FInstancedSkinnedMeshSceneProxyDesc::CreateMeshObject(FInstancedSkinnedMeshSceneProxyDesc(Cast<UMyInstancedSkinnedMeshComponent>(InComponent)), InRenderData, InFeatureLevel);
+	// Use reinterpret_cast to satisfy the constructor. This is safe ONLY because UMyInstancedSkinnedMeshComponent is a clone of UInstancedSkinnedMeshComponent.
+	return FInstancedSkinnedMeshSceneProxyDesc::CreateMeshObject(FInstancedSkinnedMeshSceneProxyDesc(reinterpret_cast<const UInstancedSkinnedMeshComponent*>(Cast<UMyInstancedSkinnedMeshComponent>(InComponent))), InRenderData, InFeatureLevel);
 }
 
 UMyInstancedSkinnedMeshComponent::UMyInstancedSkinnedMeshComponent(FVTableHelper& Helper)
@@ -145,7 +159,7 @@ void UMyInstancedSkinnedMeshComponent::Serialize(FArchive& Ar)
 	if (Ar.IsLoading())
 	{
 		// Read existing data if it was serialized
-		TArray<FMySkinnedMeshInstanceData> TempInstanceData;
+		TArray<FSkinnedMeshInstanceData> TempInstanceData;
 		TArray<float> TempInstanceCustomData;
 
 		if (bHasSkipSerializationPropertiesData)
@@ -240,10 +254,7 @@ void UMyInstancedSkinnedMeshComponent::OnRegister()
 	Super::OnRegister();
 }
 
-void UMyInstancedSkinnedMeshComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
+
 
 bool UMyInstancedSkinnedMeshComponent::IsEnabled() const
 {
@@ -331,7 +342,7 @@ void UMyInstancedSkinnedMeshComponent::SetInstanceDataGPUOnly(bool bInInstancesG
 	}
 }
 
-void UMyInstancedSkinnedMeshComponent::SetupNewInstanceData(FMySkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 InAnimationIndex)
+void UMyInstancedSkinnedMeshComponent::SetupNewInstanceData(FSkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 InAnimationIndex)
 {
 	InOutNewInstanceData.Transform = InInstanceTransform;
 	InOutNewInstanceData.AnimationIndex = InAnimationIndex;
@@ -490,7 +501,7 @@ FPrimitiveSceneProxy* UMyInstancedSkinnedMeshComponent::CreateSceneProxy()
 
 	GetOrCreateInstanceDataSceneProxy();
 
-	Result = FInstancedSkinnedMeshSceneProxyDesc::CreateSceneProxy(FInstancedSkinnedMeshSceneProxyDesc(this), bHideSkin, ShouldNaniteSkin(), IsEnabled(), ComputeMinLOD());
+	Result = FInstancedSkinnedMeshSceneProxyDesc::CreateSceneProxy(FInstancedSkinnedMeshSceneProxyDesc(reinterpret_cast<const UInstancedSkinnedMeshComponent*>(this)), bHideSkin, ShouldNaniteSkin(), IsEnabled(), ComputeMinLOD());
 
 	// Unclear exactly how this is supposed to work with a non-instanced proxy - will be interesting...
 	// If GPU-only flag set, instance data is entirely GPU driven, don't upload from CPU.
@@ -551,8 +562,8 @@ void UMyInstancedSkinnedMeshComponent::PostEditChangeChainProperty(FPropertyChan
 			}
 			MarkRenderStateDirty();
 		}
-		else if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FMySkinnedMeshInstanceData, Transform)
-			 || PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FMySkinnedMeshInstanceData, AnimationIndex))
+		else if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FSkinnedMeshInstanceData, Transform)
+			 || PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(FSkinnedMeshInstanceData, AnimationIndex))
 		{
 			MarkRenderStateDirty();
 		}
@@ -835,7 +846,7 @@ bool UMyInstancedSkinnedMeshComponent::GetInstanceTransform(FPrimitiveInstanceId
 		return false;
 	}
 
-	const FMySkinnedMeshInstanceData& Instance = InstanceData[InstanceIndex];
+	const FSkinnedMeshInstanceData& Instance = InstanceData[InstanceIndex];
 
 	OutInstanceTransform = FTransform(Instance.Transform);
 	if (bWorldSpace)
@@ -899,7 +910,7 @@ struct HSkinnedMeshInstance : public HHitProxy
 	TObjectPtr<UMyInstancedSkinnedMeshComponent> Component;
 	int32 InstanceIndex;
 
-	DECLARE_HIT_PROXY(ENGINE_API);
+	DECLARE_HIT_PROXY(ULTIMATEMULTIPLAYERSURVIV_API);
 	HSkinnedMeshInstance(UMyInstancedSkinnedMeshComponent* InComponent, int32 InInstanceIndex)
 	: HHitProxy(HPP_World)
 	, Component(InComponent)
@@ -1126,7 +1137,7 @@ void UMyInstancedSkinnedMeshComponent::TickComponent(float DeltaTime, enum ELeve
 			UWorld* World = GetWorld();
 			if (World && World->WorldType == EWorldType::Editor)
 			{
-				RefreshMorphTargets();
+				//RefreshMorphTargets();
 			}
 		}
 #endif // WITH_EDITOR

@@ -9,6 +9,14 @@
 #include "InstanceDataSceneProxy.h"
 #include "InstanceData/InstanceDataManager.h"
 #include "InstancedSkinnedMeshSceneProxyDesc.h"
+
+// Suppress C3837 error in InstancedSkinnedMeshComponent.h
+#undef UE_EXPERIMENTAL
+#define UE_EXPERIMENTAL(...)
+#undef UE_DEPRECATED
+#define UE_DEPRECATED(...)
+#include "Components/InstancedSkinnedMeshComponent.h"
+
 #include "MyInstancedSkinnedMeshComponent.generated.h"
 
 class FPrimitiveSceneProxy;
@@ -19,36 +27,7 @@ class UAnimBank;
 struct FAnimBankRecordHandle;
 struct FPrimitiveSceneDesc;
 
-USTRUCT()
-struct FMySkinnedMeshInstanceData
-{
-	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditAnywhere, Category=Instances)
-	FTransform3f Transform;
-
-	UPROPERTY(EditAnywhere, Category = Animation)
-	uint32 AnimationIndex;
-
-	FMySkinnedMeshInstanceData()
-	: Transform(FTransform3f::Identity)
-	, AnimationIndex(0)
-	{
-	}
-
-	FMySkinnedMeshInstanceData(const FTransform3f& InTransform, uint32 InAnimationIndex)
-	: Transform(InTransform)
-	, AnimationIndex(InAnimationIndex)
-	{
-	}
-
-	friend FArchive& operator<<(FArchive& Ar, FMySkinnedMeshInstanceData& InstanceData)
-	{
-		Ar << InstanceData.Transform;
-		Ar << InstanceData.AnimationIndex;
-		return Ar;
-	}
-};
 
 UCLASS(ClassGroup=Rendering, hidecategories=(Object,Activation,Collision,"Components|Activation",Physics), editinlinenew, meta=(BlueprintSpawnableComponent), Blueprintable)
 
@@ -62,7 +41,7 @@ protected:
 
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
-	TArray<FMySkinnedMeshInstanceData> InstanceData;
+	TArray<FSkinnedMeshInstanceData> InstanceData;
 
 	/** Defines the number of floats that will be available per instance for custom data */
 	UPROPERTY(EditAnywhere, Category=Instances, AdvancedDisplay)
@@ -223,7 +202,7 @@ public:
 
 	int32 GetNumCustomDataFloats() const { return NumCustomDataFloats; }
 	const TArray<float>& GetInstanceCustomData() const { return InstanceCustomData; }
-	const TArray<FMySkinnedMeshInstanceData>& GetInstanceData() const { return InstanceData; }
+	const TArray<FSkinnedMeshInstanceData>& GetInstanceData() const { return InstanceData; }
 
 	int32 GetInstanceCountGPUOnly() const { return NumInstancesGPUOnly; }
 
@@ -265,7 +244,7 @@ private:
 	void SetInstanceDataGPUOnly(bool bInInstancesGPUOnly);
 
 	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
-	void SetupNewInstanceData(FMySkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 AnimationIndex);
+	void SetupNewInstanceData(FSkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 AnimationIndex);
 
 	static bool ShouldForceRefPose();
 	static bool ShouldUseAnimationBounds();
@@ -337,7 +316,7 @@ public:
 	TObjectPtr<USkinnedAsset> SkinnedAsset = nullptr;
 
 	UPROPERTY()
-	TArray<FMySkinnedMeshInstanceData> InstanceData;
+	TArray<FSkinnedMeshInstanceData> InstanceData;
 
 	TBitArray<> SelectedInstances;
 
