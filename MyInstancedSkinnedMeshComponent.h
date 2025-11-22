@@ -14,4 +14,5 @@ class VAT_API UMyInstancedSkinnedMeshComponent : public UInstancedSkinnedMeshCom
 {
 	GENERATED_BODY()
 	
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 };
