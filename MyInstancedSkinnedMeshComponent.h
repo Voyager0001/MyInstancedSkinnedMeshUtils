@@ -52,7 +52,7 @@ struct FMySkinnedMeshInstanceData
 
 UCLASS(ClassGroup=Rendering, hidecategories=(Object,Activation,Collision,"Components|Activation",Physics), editinlinenew, meta=(BlueprintSpawnableComponent), Blueprintable)
 
-class VAT_API UMyInstancedSkinnedMeshComponent : public USkinnedMeshComponent
+class ULTIMATEMULTIPLAYERSURVIV_API UMyInstancedSkinnedMeshComponent : public USkinnedMeshComponent
 {
 	GENERATED_UCLASS_BODY()
 	
