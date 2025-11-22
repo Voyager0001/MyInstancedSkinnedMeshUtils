@@ -50,7 +50,7 @@ struct FMySkinnedMeshInstanceData
 	}
 };
 
-UCLASS(ClassGroup=Rendering, hidecategories=(Object,Activation,Collision,"Components|Activation",Physics), editinlinenew, meta=(BlueprintSpawnableComponent), Blueprintable, MinimalAPI)
+UCLASS(ClassGroup=Rendering, hidecategories=(Object,Activation,Collision,"Components|Activation",Physics), editinlinenew, meta=(BlueprintSpawnableComponent), Blueprintable)
 
 class VAT_API UMyInstancedSkinnedMeshComponent : public USkinnedMeshComponent
 {
@@ -108,7 +108,7 @@ protected:
 
 public:
 
-	VAT_API UMyInstancedSkinnedMeshComponent(FVTableHelper& Helper);
+	UMyInstancedSkinnedMeshComponent(FVTableHelper& Helper);
 	virtual ~UMyInstancedSkinnedMeshComponent();
 
 	//~ Begin UObject Interface
@@ -165,50 +165,50 @@ public:
 
 	/** Add an instance to this component. Transform is given in local space of this component unless bWorldSpace is set. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API FPrimitiveInstanceId AddInstance(const FTransform& InstanceTransform, int32 AnimationIndex, bool bWorldSpace = false);
+	FPrimitiveInstanceId AddInstance(const FTransform& InstanceTransform, int32 AnimationIndex, bool bWorldSpace = false);
 
 	/** Add multiple instances to this component. Transform is given in local space of this component unless bWorldSpace is set. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API TArray<FPrimitiveInstanceId> AddInstances(const TArray<FTransform>& Transforms, const TArray<int32>& AnimationIndices, bool bShouldReturnIds, bool bWorldSpace = false);
+	TArray<FPrimitiveInstanceId> AddInstances(const TArray<FTransform>& Transforms, const TArray<int32>& AnimationIndices, bool bShouldReturnIds, bool bWorldSpace = false);
 
 	/** Update custom data for specific instance */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API bool SetCustomDataValue(FPrimitiveInstanceId InstanceId, int32 CustomDataIndex, float CustomDataValue);
+	bool SetCustomDataValue(FPrimitiveInstanceId InstanceId, int32 CustomDataIndex, float CustomDataValue);
 
 	/** Update all custom data values for specific instance, the size of the array view must match the NumCustomDataFloats. Returns True on success. */
-	VAT_API bool SetCustomData(FPrimitiveInstanceId InstanceId, TArrayView<const float> CustomDataFloats);
+	bool SetCustomData(FPrimitiveInstanceId InstanceId, TArrayView<const float> CustomDataFloats);
 
 	/** Get all custom data values for specific instance, the size of the array view must match the NumCustomDataFloats. Returns True on success. */
-	VAT_API bool GetCustomData(FPrimitiveInstanceId InstanceId, TArrayView<float> CustomDataFloats) const;
+	bool GetCustomData(FPrimitiveInstanceId InstanceId, TArrayView<float> CustomDataFloats) const;
 
 	/** Update number of custom data entries per instance. This applies to all instances and will reallocate the full custom data buffer and reset all values to 0 */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API void SetNumCustomDataFloats(int32 InNumCustomDataFloats);
+	void SetNumCustomDataFloats(int32 InNumCustomDataFloats);
 
 	/** Get the transform for the instance specified. Instance is returned in local space of this component unless bWorldSpace is set. Returns True on success. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API bool GetInstanceTransform(FPrimitiveInstanceId InstanceId, FTransform& OutInstanceTransform, bool bWorldSpace = false) const;
+	bool GetInstanceTransform(FPrimitiveInstanceId InstanceId, FTransform& OutInstanceTransform, bool bWorldSpace = false) const;
 
 	/** Get the animation index for the instance specified. Returns True on success. */
-	VAT_API bool GetInstanceAnimationIndex(FPrimitiveInstanceId InstanceId, int32& OutAnimationIndex) const;
+	bool GetInstanceAnimationIndex(FPrimitiveInstanceId InstanceId, int32& OutAnimationIndex) const;
 
 	/** Remove the instance specified. Returns True on success. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API bool RemoveInstance(FPrimitiveInstanceId InstanceId);
+	bool RemoveInstance(FPrimitiveInstanceId InstanceId);
 
 	/** Remove the instances specified. Returns True on success. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API void RemoveInstances(const TArray<FPrimitiveInstanceId>& InstancesToRemove);
+	void RemoveInstances(const TArray<FPrimitiveInstanceId>& InstancesToRemove);
 
 	/** Clear all instances being rendered by this component. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API void ClearInstances();
+	void ClearInstances();
 
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API class UTransformProviderData* GetTransformProvider() const;
+	class UTransformProviderData* GetTransformProvider() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API void SetTransformProvider(class UTransformProviderData* InTransformProvider);
+	void SetTransformProvider(class UTransformProviderData* InTransformProvider);
 
 	/**
 	 * Optimize the instance data by performing sorting according to spatial hash on the _source_ data.
@@ -216,10 +216,10 @@ public:
 	 *  @param bShouldRetainIdMap	If true, the id mapping is updated instead of reset to identity, this retains the validity of the IDs but adds some memory and storage cost (for the ID mapping).
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedSkinnedMesh")
-	VAT_API void OptimizeInstanceData(bool bShouldRetainIdMap = false);
+	void OptimizeInstanceData(bool bShouldRetainIdMap = false);
 
-	VAT_API bool IsEnabled() const;
-	VAT_API int32 GetInstanceCount() const;
+	bool IsEnabled() const;
+	int32 GetInstanceCount() const;
 
 	int32 GetNumCustomDataFloats() const { return NumCustomDataFloats; }
 	const TArray<float>& GetInstanceCustomData() const { return InstanceCustomData; }
@@ -229,7 +229,7 @@ public:
 
 	int32 GetMinDrawDistance() const { return InstanceMinDrawDistance; }
 	void GetCullDistances(int32& OutStartCullDistance, int32& OutEndCullDistance) const { OutStartCullDistance = InstanceStartCullDistance; OutEndCullDistance = InstanceEndCullDistance; }
-	VAT_API void SetCullDistances(int32 StartCullDistance, int32 EndCullDistance);
+	void SetCullDistances(int32 StartCullDistance, int32 EndCullDistance);
 protected:
 
 	/** Handle changes that must happen before the proxy is recreated. */
@@ -267,11 +267,11 @@ private:
 	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
 	void SetupNewInstanceData(FMySkinnedMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform3f& InInstanceTransform, int32 AnimationIndex);
 
-	static VAT_API bool ShouldForceRefPose();
-	static VAT_API bool ShouldUseAnimationBounds();
+	static bool ShouldForceRefPose();
+	static bool ShouldUseAnimationBounds();
 
-	static VAT_API FSkeletalMeshObject* CreateMeshObject(const FInstancedSkinnedMeshSceneProxyDesc& InMeshDesc, TObjectPtr<UTransformProviderData> InTransformProvider, FSkeletalMeshRenderData* InRenderData, ERHIFeatureLevel::Type InFeatureLevel);
-	static VAT_API FPrimitiveSceneProxy* CreateSceneProxy(const FInstancedSkinnedMeshSceneProxyDesc& Desc, bool bHideSkin, bool bShouldNaniteSkin, bool bIsEnabled, int32 MinLODIndex);
+	static FSkeletalMeshObject* CreateMeshObject(const FInstancedSkinnedMeshSceneProxyDesc& InMeshDesc, TObjectPtr<UTransformProviderData> InTransformProvider, FSkeletalMeshRenderData* InRenderData, ERHIFeatureLevel::Type InFeatureLevel);
+	static FPrimitiveSceneProxy* CreateSceneProxy(const FInstancedSkinnedMeshSceneProxyDesc& Desc, bool bHideSkin, bool bShouldNaniteSkin, bool bIsEnabled, int32 MinLODIndex);
 
 	TSharedPtr<FInstanceDataSceneProxy, ESPMode::ThreadSafe> GetOrCreateInstanceDataSceneProxy();
 
